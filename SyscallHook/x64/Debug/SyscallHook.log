@@ -1,0 +1,8 @@
+﻿  Building 'SyscallHook' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
+  SyscallHook.vcxproj -> D:\Users\ofek\Desktop\new2\SyscallHook\x64\Debug\SyscallHook.sys
+  Done Adding Additional Store
+  Successfully signed: D:\Users\ofek\Desktop\new2\SyscallHook\x64\Debug\SyscallHook.sys
+  
+  Driver is 'Universal'.
+  Inf2Cat task was skipped as there were no inf files to process
+  
