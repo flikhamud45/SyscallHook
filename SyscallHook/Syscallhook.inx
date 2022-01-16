@@ -1,0 +1,111 @@
+;/*++
+;
+;Copyright (c) Microsoft Corporation.  All rights reserved.
+;
+;Module Name:
+;
+;    SIMPLE.INF
+;
+;Abstract:
+;    INF file for installing SyscallHook device drivers. This is an
+;    extremely simple form of INF. This one uses one of the system
+;    defined icon for its class instead of one the provided by the
+;    SyscallHook class installer DLL. To test this INF, make sure
+;    the SyscallHook class is not previously installed on the system.
+;    If it is installed, you must remove the existing SyscallHook class key
+;    (HKLM\System\CurrentControlSet\Control\Class\{B85B7C50-6A01-11d2-B841-00C04FAD5171})
+;    from the registry. Otherwise the setup ignores the entire
+;    [ClassInstall32] section if it finds the SyscallHook class guid
+;    in the registy.
+;
+;--*/
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=SyscallHook
+ClassGuid={B85B7C50-6A01-11d2-B841-00C04FAD5171}
+Provider=%ProviderName%
+DriverVer=01/16/2021,1.00.2064
+CatalogFile=SyscallHook.cat
+
+[DestinationDirs]
+DefaultDestDir = 12
+SyscallHook_Device_CoInstaller_CopyFiles = 11
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SyscallHookClassReg
+
+[SyscallHookClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+HKR,,DeviceCharacteristics,0x10001,0x100                 ;Use same security checks on relative opens
+HKR,,Security,,"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GA;;;LS)" ;Allow generic all access to system, built-in Admin, and Local System.
+                                                         ;This one overrides the security set by the driver
+
+;*****************************************
+; SyscallHook Device  Install Section
+;*****************************************
+
+[Manufacturer]
+%StdMfg%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%SyscallHookDevice.DeviceDesc%=SyscallHook_Device, Root\SyscallHook
+
+[SyscallHook_Device.NT]
+CopyFiles=SyscallHook_Device.NT.Copy
+
+[SyscallHook_Device.NT.Copy]
+SyscallHook.sys
+
+;-------------- Service installation
+
+[SyscallHook_Device.NT.Services]
+AddService = SyscallHook, %SPSVCINST_ASSOCSERVICE%, SyscallHook_Service_Inst
+
+[SyscallHook_Service_Inst]
+DisplayName    = %SYSCALLHOOK.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\SyscallHook.sys
+
+[SourceDisksNames]
+1 = %DiskId1%,,,""
+
+[SourceDisksFiles]
+SyscallHook.sys  = 1,,
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+
+;
+;--- SyscallHook_Device WDF Coinstaller installation ------
+;
+[SyscallHook_Device.NT.CoInstallers]
+AddReg=SyscallHook_Device_CoInstaller_AddReg
+CopyFiles=SyscallHook_Device_CoInstaller_CopyFiles
+
+[SyscallHook_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[SyscallHook_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[SyscallHook_Device.NT.Wdf]
+KmdfService = SyscallHook, SyscallHook_wdfsect
+
+[SyscallHook_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+
+
+[Strings]
+SPSVCINST_ASSOCSERVICE = 0x00000002
+ProviderName = "TODO-Set-Provider"
+StdMfg = "(Standard system devices)"
+ClassName = "SyscallHook"
+DiskId1 = "SyscallHook Device Installation Disk #1"
+SyscallHookDevice.DeviceDesc = "WDF Simple SyscallHook (No Class Installer)"
+SyscallHook.SVCDESC = "WDF Simple SyscallHook Device Driver"
